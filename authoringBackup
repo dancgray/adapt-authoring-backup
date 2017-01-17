@@ -9,9 +9,9 @@ BACKUPS_DIR="/home/username/backups/$APP_NAME"
 APP_DIR="/var/www/appname"
 S3_BUCKET="your_bucket"
 
+TIMESTAMP=$(date "+%Y-%m-%d")
 DB_BACKUP_NAME="$MONGO_DATABASE-$TIMESTAMP"
 APP_BACKUP_NAME="$APP_NAME-$TIMESTAMP"
-TIMESTAMP=`date +%F-%H%M`
 
 function print_task
 {
@@ -34,7 +34,7 @@ mongodump -d $MONGO_DATABASE -o $BACKUPS_DIR
 # mongo admin --eval "printjson(db.fsyncUnlock())"
 
 # compress database files
-tar -zcvf $BACKUPS_DIR/$DB_BACKUP_NAME.tgz $BACKUPS_DIR/$MONGO_DATABASE
+tar -zcf $BACKUPS_DIR/$DB_BACKUP_NAME.tgz $BACKUPS_DIR/$MONGO_DATABASE
 
 print_task "Backup destination ($BACKUPS_DIR)"
 rm -rf $BACKUPS_DIR/$MONGO_DATABASE
@@ -48,7 +48,7 @@ GIT_FILES="$APP_DIR/.git"
 # TODO excludes are not currently working, could be white space sensitivity
 #tar -zcvf --exclude=$NODE_MODULES --exclude=$FW_NODE_MODULES --exclude=$GIT_FILES $BACKUPS_DIR/$APP_BACKUP_NAME.tgz $APP_DIR
 
-tar -zcvf $BACKUPS_DIR/$APP_BACKUP_NAME.tgz $APP_DIR
+tar -zcf $BACKUPS_DIR/$APP_BACKUP_NAME.tgz $APP_DIR
 
 # Copy application and database to Amazon S3
 # needs check for files existen
