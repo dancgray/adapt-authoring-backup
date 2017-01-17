@@ -1,13 +1,6 @@
 #!/bin/bash
 
-# enter configuration values
-MONGO_DATABASE="your_db_name"
-APP_NAME="your_app_name"
-MONGO_HOST="127.0.0.1"
-MONGO_PORT="27017"
-BACKUPS_DIR="/home/username/backups/$APP_NAME"
-APP_DIR="/var/www/appname"
-S3_BUCKET="your_bucket"
+source config.sh
 
 TIMESTAMP=$(date "+%Y-%m-%d")
 DB_BACKUP_NAME="$MONGO_DATABASE-$TIMESTAMP"
@@ -25,7 +18,7 @@ function print_header
   echo "-------------------------------------------------------------------------------"
 }
 
-print_header "Backing up database ($APP_NAME)"
+print_header "Backing up database ($MONGO_DATABASE)"
 print_task "Backup destination ($BACKUPS_DIR)"
 
 # mongo admin --eval "printjson(db.fsyncLock())"
@@ -35,9 +28,6 @@ mongodump -d $MONGO_DATABASE -o $BACKUPS_DIR
 
 # compress database files
 tar -zcf $BACKUPS_DIR/$DB_BACKUP_NAME.tgz $BACKUPS_DIR/$MONGO_DATABASE
-
-print_task "Backup destination ($BACKUPS_DIR)"
-rm -rf $BACKUPS_DIR/$MONGO_DATABASE
 
 # compress the application files
 # filtered files
