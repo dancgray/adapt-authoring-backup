@@ -3,7 +3,7 @@
 source config.sh
 
 TIMESTAMP=$(date "+%Y-%m-%d")
-DB_BACKUP_NAME="$MONGO_DATABASE-$TIMESTAMP"
+DB_BACKUP_NAME="$APP_NAME-$MONGO_DATABASE-$TIMESTAMP"
 APP_BACKUP_NAME="$APP_NAME-$TIMESTAMP"
 
 function print_task
@@ -30,18 +30,22 @@ mongodump -d $MONGO_DATABASE -o $BACKUPS_DIR
 tar -zcf $BACKUPS_DIR/$DB_BACKUP_NAME.tgz $BACKUPS_DIR/$MONGO_DATABASE
 
 # compress the application files
-# filtered files
-NODE_MODULES="node_modules"
-FW_NODE_MODULES="$APP_DIR/adapt_framework/node_modules"
-GIT_FILES="$APP_DIR/.git"
+# filtered files, use shell syntax, or globbing not regex.
+# TODO add excludes file and use --exclude-from rather than list
+# TODO test restore with all node_modules removed
+# these will match any instance of named folders
+# NODE_MODULES="node_modules"
+# ZIPS="*.zip"
+# EXPORTS="exports"
+# GIT_FILES="$APP_DIR/.git"
 
 # TODO excludes are not currently working, could be white space sensitivity
-#tar -zcvf --exclude=$NODE_MODULES --exclude=$FW_NODE_MODULES --exclude=$GIT_FILES $BACKUPS_DIR/$APP_BACKUP_NAME.tgz $APP_DIR
+tar -zcvf $BACKUPS_DIR/$APP_BACKUP_NAME.tgz --exclude='node_modules' --exclude='*.zip' --exclude='exports' $APP_DIR
 
-tar -zcf $BACKUPS_DIR/$APP_BACKUP_NAME.tgz $APP_DIR
+#tar -zcf $BACKUPS_DIR/$APP_BACKUP_NAME.tgz $APP_DIR
 
 # Copy application and database to Amazon S3
-# needs check for files existen
+# needs check for files existence
 aws s3 cp $BACKUPS_DIR/$DB_BACKUP_NAME.tgz s3://$S3_BUCKET/
 
 aws s3 cp $BACKUPS_DIR/$APP_BACKUP_NAME.tgz s3://$S3_BUCKET/
