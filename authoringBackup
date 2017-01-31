@@ -34,7 +34,7 @@ tar -zcf "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "$BACKUPS_DIR/$MONGO_DATABASE"
 # filtered files, use shell syntax, or globbing not regex.
 # TODO test restore without all node_modules removed
 
-tar -zcvf "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" --exclude='node_modules' --exclude='*.zip' --exclude='exports' "$APP_DIR"
+tar -zcf "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" --exclude='node_modules' --exclude='*.zip' --exclude='exports' "$APP_DIR"
 
 # Copy application and database to Amazon S3
 # needs check for files existence
