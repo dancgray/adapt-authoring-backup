@@ -1,6 +1,6 @@
 #!/bin/bash
 # enter configuration values
-MONGO_DATABASE="adapt-tenant-cgkineo"
+MONGO_DATABASE="adapt-tenant-db"
 APP_NAME="backupTest"
 MONGO_HOST="127.0.0.1"
 MONGO_PORT="27017"

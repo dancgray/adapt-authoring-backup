@@ -23,35 +23,38 @@ print_task "Backup destination ($BACKUPS_DIR)"
 
 # mongo admin --eval "printjson(db.fsyncLock())"
 # $MONGODUMP_PATH -h $MONGO_HOST:$MONGO_PORT -d $MONGO_DATABASE
-mongodump -d $MONGO_DATABASE -o $BACKUPS_DIR
+# consider using use OPLOG --oplog
+mongodump -d "$MONGO_DATABASE" -o "$BACKUPS_DIR"
 # mongo admin --eval "printjson(db.fsyncUnlock())"
 
 # compress database files
-tar -zcf $BACKUPS_DIR/$DB_BACKUP_NAME.tgz $BACKUPS_DIR/$MONGO_DATABASE
+tar -zcf "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "$BACKUPS_DIR/$MONGO_DATABASE"
 
 # compress the application files
 # filtered files, use shell syntax, or globbing not regex.
-# TODO add excludes file and use --exclude-from rather than list
-# TODO test restore with all node_modules removed
-# these will match any instance of named folders
-# NODE_MODULES="node_modules"
-# ZIPS="*.zip"
-# EXPORTS="exports"
-# GIT_FILES="$APP_DIR/.git"
+# TODO test restore without all node_modules removed
 
-# TODO excludes are not currently working, could be white space sensitivity
-tar -zcvf $BACKUPS_DIR/$APP_BACKUP_NAME.tgz --exclude='node_modules' --exclude='*.zip' --exclude='exports' $APP_DIR
-
-#tar -zcf $BACKUPS_DIR/$APP_BACKUP_NAME.tgz $APP_DIR
+tar -zcvf "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" --exclude='node_modules' --exclude='*.zip' --exclude='exports' "$APP_DIR"
 
 # Copy application and database to Amazon S3
 # needs check for files existence
-aws s3 cp $BACKUPS_DIR/$DB_BACKUP_NAME.tgz s3://$S3_BUCKET/
+aws s3 cp "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
 
-aws s3 cp $BACKUPS_DIR/$APP_BACKUP_NAME.tgz s3://$S3_BUCKET/
+aws s3 cp "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
 
 # remove local files
-rm $BACKUPS_DIR/$APP_BACKUP_NAME.tgz
-rm $BACKUPS_DIR/$DB_BACKUP_NAME.tgz
+if [ -f "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" ]; then
+  rm "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz"
+  print_task "App backup removed"
+else
+  print_task "App backup file not found and not removed"
+fi
+
+if [ -f "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" ]; then
+  rm "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz"
+  print_task "Database backup removed"
+else
+  print_task "Database backup file not found and not removed"
+fi
 
 print_task "Backup finished ($TIMESTAMP)"
