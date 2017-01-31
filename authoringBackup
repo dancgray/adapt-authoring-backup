@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Stop script on error
+set -o errexit
+# Stop script using undeclared variables
+set -o nounset
+
+# get config variables
 source config.sh
 
 TIMESTAMP=$(date "+%Y-%m-%d")
