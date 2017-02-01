@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Script to backup Adapt Authoring tool
+# TODO should have check for disk space available and set a threshold
+
 # Stop script on error
 set -o errexit
 # Stop script using undeclared variables
@@ -27,40 +30,47 @@ function print_header
 print_header "Backing up database ($MONGO_DATABASE)"
 print_task "Backup destination ($BACKUPS_DIR)"
 
-# mongo admin --eval "printjson(db.fsyncLock())"
-# $MONGODUMP_PATH -h $MONGO_HOST:$MONGO_PORT -d $MONGO_DATABASE
-# consider using use OPLOG --oplog
-mongodump -d "$MONGO_DATABASE" -o "$BACKUPS_DIR"
-# mongo admin --eval "printjson(db.fsyncUnlock())"
-
-# compress database files
-tar -zcf "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "$BACKUPS_DIR/$MONGO_DATABASE"
-
-# compress the application files
-# filtered files, use shell syntax, or globbing not regex.
-# TODO test restore without all node_modules removed
-
-tar -zcf "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" --exclude='node_modules' --exclude='*.zip' --exclude='exports' "$APP_DIR"
-
-# Copy application and database to Amazon S3
-# needs check for files existence
-aws s3 cp "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
-
-aws s3 cp "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
-
-# remove local files
-if [ -f "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" ]; then
-  rm "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz"
-  print_task "App backup removed"
+# Check if we have some disk space
+if [ $(df -P "$BACKUPS_DIR" | awk '{ gsub("%",""); capacity = $5 }; END { print capacity }') -gt "$MINCAPACITY" ]; then
+  print_task "Backup failed. Not enough disk space. ($TIMESTAMP)"
 else
-  print_task "App backup file not found and not removed"
-fi
 
-if [ -f "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" ]; then
-  rm "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz"
-  print_task "Database backup removed"
-else
-  print_task "Database backup file not found and not removed"
-fi
+  # mongo admin --eval "printjson(db.fsyncLock())"
+  # $MONGODUMP_PATH -h $MONGO_HOST:$MONGO_PORT -d $MONGO_DATABASE
+  # consider using use OPLOG --oplog
+  mongodump -d "$MONGO_DATABASE" -o "$BACKUPS_DIR"
+  # mongo admin --eval "printjson(db.fsyncUnlock())"
 
-print_task "Backup finished ($TIMESTAMP)"
+  # compress database files
+  tar -zcf "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "$BACKUPS_DIR/$MONGO_DATABASE"
+
+  # compress the application files
+  # filtered files, use shell syntax, or globbing not regex.
+  # TODO test restore without all node_modules removed
+
+  tar -zcf "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" --exclude='node_modules' --exclude='*.zip' --exclude='exports' "$APP_DIR"
+
+  # Copy application and database to Amazon S3
+  # needs check for files existence
+  aws s3 cp "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
+
+  aws s3 cp "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
+
+  # remove local files
+  if [ -f "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" ]; then
+    rm "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz"
+    print_task "App backup removed"
+  else
+    print_task "App backup file not found and not removed"
+  fi
+
+  if [ -f "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" ]; then
+    rm "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz"
+    print_task "Database backup removed"
+  else
+    print_task "Database backup file not found and not removed"
+  fi
+
+  print_task "Backup finished ($TIMESTAMP)"
+
+fi

@@ -14,3 +14,5 @@ BACKUPS_DIR="/Users/danielgray/backups/$APP_NAME"
 APP_DIR="/Users/danielgray/websiteTest/adapt_authoring"
 # Amazon S3 bucket name
 S3_BUCKET="mybucket"
+# Minimum disk space as a %
+MINCAPACITY="75"
