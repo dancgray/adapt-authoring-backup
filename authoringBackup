@@ -52,9 +52,9 @@ else
 
   # Copy application and database to Amazon S3
   # needs check for files existence
-  aws s3 cp "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
+  aws s3 cp --quiet "$BACKUPS_DIR/$DB_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
 
-  aws s3 cp "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
+  aws s3 cp --quiet "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" "s3://$S3_BUCKET/"
 
   # remove local files
   if [ -f "$BACKUPS_DIR/$APP_BACKUP_NAME.tgz" ]; then
