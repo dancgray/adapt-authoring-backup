@@ -17,7 +17,7 @@ APP_BACKUP_NAME="$APP_NAME-$TIMESTAMP"
 
 function print_task
 {
-  printf "\n==> ${1}\n\n"
+  printf "\n==> ${1}\n"
 }
 
 function print_header
